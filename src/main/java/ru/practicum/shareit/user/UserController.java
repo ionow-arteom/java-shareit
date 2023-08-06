@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -9,33 +10,26 @@ import ru.practicum.shareit.user.dto.UserDto;
 import javax.validation.Valid;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
-
 @RestController
 @RequestMapping("/users")
 @Validated
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
     @PostMapping
-    public ResponseEntity<UserDto> addUser(@Valid @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> add(@Valid @RequestBody UserDto userDto) {
         if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        UserDto newUser = userService.addUser(userDto);
+        UserDto newUser = userService.add(userDto);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUser(@PathVariable int userId) {
-        UserDto user = userService.getUser(userId);
+    public ResponseEntity<UserDto> get(@PathVariable int userId) {
+        UserDto user = userService.get(userId);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
         } else {
@@ -44,8 +38,8 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserDto> editUser(@PathVariable int userId, @RequestBody UserDto userDto) {
-        UserDto editedUser = userService.editUser(userId, userDto);
+    public ResponseEntity<UserDto> edit(@PathVariable int userId, @RequestBody UserDto userDto) {
+        UserDto editedUser = userService.edit(userId, userDto);
         if (editedUser != null) {
             return new ResponseEntity<>(editedUser, HttpStatus.OK);
         } else {
@@ -54,8 +48,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int userId) {
-        boolean isDeleted = userService.deleteUser(userId);
+    public ResponseEntity<Void> delete(@PathVariable int userId) {
+        boolean isDeleted = userService.delete(userId);
         if (isDeleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {

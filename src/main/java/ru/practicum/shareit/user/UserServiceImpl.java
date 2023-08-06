@@ -16,7 +16,7 @@ public class UserServiceImpl implements UserService {
     private int currentUserId = 1;
 
     @Override
-    public UserDto addUser(UserDto userDto) {
+    public UserDto add(UserDto userDto) {
         for (UserDto existingUser : users.values()) {
             if (existingUser.getEmail().equals(userDto.getEmail())) {
                 throw new UserDuplicateEmailException();
@@ -28,12 +28,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUser(int userId) {
+    public UserDto get(int userId) {
         return users.get(userId);
     }
 
     @Override
-    public UserDto editUser(int userId, UserDto userDto) {
+    public UserDto edit(int userId, UserDto userDto) {
         UserDto existingUser = users.get(userId);
         if (existingUser != null) {
             String name = userDto.getName();
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean deleteUser(int userId) {
+    public boolean delete(int userId) {
         return users.remove(userId) != null;
     }
 

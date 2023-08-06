@@ -1,8 +1,5 @@
 package ru.practicum.shareit.user;
 
-/**
- * TODO Sprint add-controllers.
- */
 import lombok.Data;
 
 import javax.validation.constraints.Email;

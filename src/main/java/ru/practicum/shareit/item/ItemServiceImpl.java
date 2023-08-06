@@ -2,7 +2,6 @@ package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.dto.ItemDto;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,16 +11,19 @@ import java.util.Map;
 public class ItemServiceImpl implements ItemService {
 
     private final Map<Integer, List<ItemDto>> userItems = new HashMap<>();
+    private final Map<Integer, ItemDto> itemMap = new HashMap<>();
     private int currentItemId = 1;
 
     @Override
-    public ItemDto addItem(int userId, ItemDto itemDto) {
+    public ItemDto add(int userId, ItemDto itemDto) {
         itemDto.setId(currentItemId++);
         userItems.computeIfAbsent(userId, k -> new ArrayList<>()).add(itemDto);
+        itemMap.put(itemDto.getId(), itemDto);
         return itemDto;
     }
 
-    public ItemDto editItem(int userId, int itemId, ItemDto itemDto) {
+    @Override
+    public ItemDto edit(int userId, int itemId, ItemDto itemDto) {
         List<ItemDto> items = userItems.get(userId);
         if (items != null) {
             for (ItemDto item : items) {
@@ -51,15 +53,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItem(int itemId) {
-        for (List<ItemDto> items : userItems.values()) {
-            for (ItemDto item : items) {
-                if (item.getId() == itemId) {
-                    return item;
-                }
-            }
-        }
-        return null;
+    public ItemDto get(int itemId) {
+        return itemMap.get(itemId);
     }
 
     @Override
@@ -74,15 +69,15 @@ public class ItemServiceImpl implements ItemService {
         if (searchText.isEmpty()) {
             return foundItems;
         }
-        for (List<ItemDto> items : userItems.values()) {
-            for (ItemDto item : items) {
-                String itemName = item.getName().toLowerCase();
-                String itemDescription = item.getDescription().toLowerCase();
-                if (item.getAvailable() && (itemName.contains(searchText) || itemDescription.contains(searchText))) {
-                    foundItems.add(item);
-                }
+
+        for (ItemDto item : itemMap.values()) {
+            String itemName = item.getName().toLowerCase();
+            String itemDescription = item.getDescription().toLowerCase();
+            if (item.getAvailable() && (itemName.contains(searchText) || itemDescription.contains(searchText))) {
+                foundItems.add(item);
             }
         }
+
         return foundItems;
     }
 }
