@@ -1,83 +1,157 @@
 package ru.practicum.shareit.item;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingMapper;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.Status;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.service.UnionService;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
 
-    private final Map<Integer, List<ItemDto>> userItems = new HashMap<>();
-    private final Map<Integer, ItemDto> itemMap = new HashMap<>();
-    private int currentItemId = 1;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
+    private final UnionService unionService;
 
+    @Transactional
     @Override
-    public ItemDto add(int userId, ItemDto itemDto) {
-        itemDto.setId(currentItemId++);
-        userItems.computeIfAbsent(userId, k -> new ArrayList<>()).add(itemDto);
-        itemMap.put(itemDto.getId(), itemDto);
+    public ItemDto add(long userId, ItemDto itemDto) {
+        unionService.checkUser(userId);
+        User user = userRepository.findById(userId).get();
+        Item item = ItemMapper.returnItem(itemDto, user);
+        itemRepository.save(item);
+        return ItemMapper.returnItemDto(item);
+    }
+
+    @Transactional
+    @Override
+    public ItemDto update(ItemDto itemDto, long itemId, long userId) {
+        unionService.checkUser(userId);
+        User user = userRepository.findById(userId).get();
+        unionService.checkItem(itemId);
+        Item item = ItemMapper.returnItem(itemDto, user);
+        item.setId(itemId);
+        if (!itemRepository.findByOwnerId(userId).contains(item)) {
+            throw new NotFoundException(Item.class, "the item was not found with the user id " + userId);
+        }
+
+        Item newItem = itemRepository.findById(item.getId()).get();
+        if (item.getName() != null) {
+            newItem.setName(item.getName());
+        }
+        if (item.getDescription() != null) {
+            newItem.setDescription(item.getDescription());
+        }
+        if (item.getAvailable() != null) {
+            newItem.setAvailable(item.getAvailable());
+        }
+        itemRepository.save(newItem);
+        return ItemMapper.returnItemDto(newItem);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ItemDto get(long itemId, long userId) {
+        unionService.checkItem(itemId);
+        Item item = itemRepository.findById(itemId).get();
+        ItemDto itemDto = ItemMapper.returnItemDto(item);
+        unionService.checkUser(userId);
+        if (item.getOwner().getId() == userId) {
+            Optional<Booking> lastBooking = bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(itemId, Status.APPROVED, LocalDateTime.now());
+            Optional<Booking> nextBooking = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(itemId, Status.APPROVED, LocalDateTime.now());
+            if (lastBooking.isPresent()) {
+                itemDto.setLastBooking(BookingMapper.returnBookingShortDto(lastBooking.get()));
+            } else {
+                itemDto.setLastBooking(null);
+            }
+            if (nextBooking.isPresent()) {
+                itemDto.setNextBooking(BookingMapper.returnBookingShortDto(nextBooking.get()));
+            } else {
+                itemDto.setNextBooking(null);
+            }
+        }
+
+        List<Comment> commentList = commentRepository.findAllByItemId(itemId);
+        if (!commentList.isEmpty()) {
+            itemDto.setComments(CommentMapper.returnICommentDtoList(commentList));
+        } else {
+            itemDto.setComments(Collections.emptyList());
+        }
         return itemDto;
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ItemDto edit(int userId, int itemId, ItemDto itemDto) {
-        List<ItemDto> items = userItems.get(userId);
-        if (items != null) {
-            for (ItemDto item : items) {
-                if (item.getId() == itemId) {
-                    String name = itemDto.getName();
-                    String description = itemDto.getDescription();
-                    Boolean available = itemDto.getAvailable();
+    public List<ItemDto> getItemsUser(long userId) {
+        unionService.checkUser(userId);
+        List<ItemDto> resultList = new ArrayList<>();
+        for (ItemDto itemDto : ItemMapper.returnItemDtoList(itemRepository.findByOwnerId(userId))) {
+            Optional<Booking> lastBooking = bookingRepository.findFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(itemDto.getId(), Status.APPROVED, LocalDateTime.now());
+            Optional<Booking> nextBooking = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(itemDto.getId(), Status.APPROVED, LocalDateTime.now());
+            if (lastBooking.isPresent()) {
+                itemDto.setLastBooking(BookingMapper.returnBookingShortDto(lastBooking.get()));
+            } else {
+                itemDto.setLastBooking(null);
+            }
+            if (nextBooking.isPresent()) {
+                itemDto.setNextBooking(BookingMapper.returnBookingShortDto(nextBooking.get()));
+            } else {
+                itemDto.setNextBooking(null);
+            }
+            resultList.add(itemDto);
+        }
 
-                    if (name == null || name.isEmpty()) {
-                        name = item.getName();
-                    }
-                    if (description == null || description.isEmpty()) {
-                        description = item.getDescription();
-                    }
-                    if (available == null) {
-                        available = item.getAvailable();
-                    }
-
-                    item.setName(name);
-                    item.setDescription(description);
-                    item.setAvailable(available);
-                    return item;
-                }
+        for (ItemDto itemDto : resultList) {
+            List<Comment> commentList = commentRepository.findAllByItemId(itemDto.getId());
+            if (!commentList.isEmpty()) {
+                itemDto.setComments(CommentMapper.returnICommentDtoList(commentList));
+            } else {
+                itemDto.setComments(Collections.emptyList());
             }
         }
-        return null;
+        return resultList;
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public ItemDto get(int itemId) {
-        return itemMap.get(itemId);
-    }
-
-    @Override
-    public List<ItemDto> getItemsByUserId(int userId) {
-        return userItems.getOrDefault(userId, new ArrayList<>());
-    }
-
-    @Override
-    public List<ItemDto> searchItems(String text) {
-        String searchText = text.toLowerCase();
-        List<ItemDto> foundItems = new ArrayList<>();
-        if (searchText.isEmpty()) {
-            return foundItems;
+    public  List<ItemDto> searchItem(String text) {
+        if (text.equals("")) {
+            return Collections.emptyList();
+        } else {
+            return ItemMapper.returnItemDtoList(itemRepository.search(text));
         }
+    }
 
-        for (ItemDto item : itemMap.values()) {
-            String itemName = item.getName().toLowerCase();
-            String itemDescription = item.getDescription().toLowerCase();
-            if (item.getAvailable() && (itemName.contains(searchText) || itemDescription.contains(searchText))) {
-                foundItems.add(item);
-            }
+    @Transactional
+    @Override
+    public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
+        unionService.checkUser(userId);
+        User user = userRepository.findById(userId).get();
+        unionService.checkItem(itemId);
+        Item item = itemRepository.findById(itemId).get();
+        LocalDateTime dateTime = LocalDateTime.now();
+        Optional<Booking> booking = bookingRepository.findFirstByItemIdAndBookerIdAndStatusAndEndBefore(itemId, userId, Status.APPROVED, dateTime);
+        if (booking.isEmpty()) {
+            throw new ValidationException("Пользователь " + userId + " не бронирует эту вещь " + itemId);
         }
-
-        return foundItems;
+        Comment comment = CommentMapper.returnComment(commentDto, item, user, dateTime);
+        commentRepository.save(comment);
+        return CommentMapper.returnCommentDto(comment);
     }
 }
