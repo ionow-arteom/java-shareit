@@ -3,7 +3,8 @@ package ru.practicum.shareit.user;
 import lombok.*;
 import javax.persistence.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

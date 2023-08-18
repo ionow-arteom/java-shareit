@@ -1,5 +1,7 @@
 package ru.practicum.shareit.item;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.user.User;
 
@@ -7,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommentMapper {
 
     public static CommentDto returnCommentDto(Comment comment) {
