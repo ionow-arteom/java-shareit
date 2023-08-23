@@ -1,17 +1,19 @@
 package ru.practicum.shareit.user.dto;
-
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class UserDto {
-    private int id;
+    private Long id;
+    @NotNull(message = "Логин не может быть пустым или содержать пробелы.")
+    @NotBlank(message = "Логин не может быть пустым или содержать пробелы.")
     private String name;
-    @Email(message = "Введенное значение не является адресом электронной почты.")
+    @NotNull(message = "Email не может быть пустым.")
+    @NotBlank(message = "Email не может быть пустым.")
+    @Email(message = "Не соответствует email-формату")
     private String email;
 }

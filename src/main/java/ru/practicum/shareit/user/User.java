@@ -1,13 +1,23 @@
 package ru.practicum.shareit.user;
 
-import lombok.Data;
+import lombok.*;
+import javax.persistence.*;
 
-import javax.validation.constraints.Email;
-
-@Data
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "users", schema = "public")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private Long id;
+    @Column(name = "name", nullable = false)
     private String name;
-    @Email(message = "Введенное значение не является адресом электронной почты.")
+    @Column(name = "email", unique = true)
     private String email;
 }

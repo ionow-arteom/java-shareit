@@ -1,71 +1,69 @@
 package ru.practicum.shareit.user;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.UserDuplicateEmailException;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.EmailExistException;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.service.UnionService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
+@Transactional(readOnly = true)
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final Map<Integer, UserDto> users = new HashMap<>();
-    private int currentUserId = 1;
+    private final UserRepository userRepository;
+    private final UnionService unionService;
 
+    @Transactional
     @Override
     public UserDto add(UserDto userDto) {
-        for (UserDto existingUser : users.values()) {
-            if (existingUser.getEmail().equals(userDto.getEmail())) {
-                throw new UserDuplicateEmailException();
-            }
+        User user = UserMapper.returnUser(userDto);
+        userRepository.save(user);
+        return UserMapper.returnUserDto(user);
+    }
+
+    @Transactional
+    @Override
+    public UserDto update(UserDto userDto, long userId) {
+        User user = UserMapper.returnUser(userDto);
+        user.setId(userId);
+        unionService.checkUser(userId);
+        User newUser = userRepository.findById(userId).get();
+        if (user.getName() != null) {
+            newUser.setName(user.getName());
         }
-        userDto.setId(currentUserId++);
-        users.put(userDto.getId(), userDto);
-        return userDto;
-    }
+        if (user.getEmail() != null) {
+            List<User> findEmail = userRepository.findByEmail(user.getEmail());
 
-    @Override
-    public UserDto get(int userId) {
-        return users.get(userId);
-    }
-
-    @Override
-    public UserDto edit(int userId, UserDto userDto) {
-        UserDto existingUser = users.get(userId);
-        if (existingUser != null) {
-            String name = userDto.getName();
-            String email = userDto.getEmail();
-
-            for (UserDto user : users.values()) {
-                if (user.getId() != userId && user.getEmail().equals(email)) {
-                    throw new UserDuplicateEmailException();
-                }
+            if (!findEmail.isEmpty() && findEmail.get(0).getId() != userId) {
+                throw new EmailExistException("there is already a user with an email " + user.getEmail());
             }
-
-            if (name == null || name.isEmpty()) {
-                name = existingUser.getName();
-            }
-            if (email == null || email.isEmpty()) {
-                email = existingUser.getEmail();
-            }
-
-            existingUser.setName(name);
-            existingUser.setEmail(email);
-            return existingUser;
+            newUser.setEmail(user.getEmail());
         }
-        return null;
+        userRepository.save(newUser);
+        return UserMapper.returnUserDto(newUser);
     }
 
+    @Transactional
     @Override
-    public boolean delete(int userId) {
-        return users.remove(userId) != null;
+    public void delete(long userId) {
+        unionService.checkUser(userId);
+        userRepository.deleteById(userId);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<UserDto> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public UserDto getById(long userId) {
+        unionService.checkUser(userId);
+        return UserMapper.returnUserDto(userRepository.findById(userId).get());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> getAll() {
+        return UserMapper.returnUserDtoList(userRepository.findAll());
     }
 }
