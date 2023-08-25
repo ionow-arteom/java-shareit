@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.http.ResponseEntity;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingOutDto;
 
