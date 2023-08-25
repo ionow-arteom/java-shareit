@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class BookingDto {
     private Long itemId;
     @NotNull(message = "Поле не может быть пустым")
-    @FutureOrPresent(message = "Может быть только в будущем.")
+    @FutureOrPresent(message = "Может быть только сейчас и позднее")
     private LocalDateTime start;
     @NotNull(message = "Поле не может быть пустым")
     @Future(message = "Может быть только в будущем")
