@@ -5,6 +5,7 @@ import ru.practicum.shareit.booking.dto.BookingShortDto;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 import java.util.List;
 
@@ -24,4 +25,6 @@ public class ItemDto {
     private BookingShortDto lastBooking;
     private BookingShortDto nextBooking;
     private List<CommentDto> comments;
+    @Positive(message = "значение должно быть положительным")
+    private Long requestId;
 }

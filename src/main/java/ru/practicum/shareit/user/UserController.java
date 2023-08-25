@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -15,35 +16,36 @@ import java.util.List;
 @RequestMapping(path = "/users")
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @PostMapping
-    public UserDto add(@RequestBody @Valid UserDto userDto) {
+    public ResponseEntity<UserDto> add(@RequestBody @Valid UserDto userDto) {
         log.info("Добавлен пользователь {} ", userDto.getId());
-        return userService.add(userDto);
+        return ResponseEntity.ok(userService.add(userDto));
     }
 
     @PatchMapping("/{userId}")
-    public UserDto update(@RequestBody UserDto userDto, @PathVariable Long userId) {
+    public ResponseEntity<UserDto> update(@RequestBody UserDto userDto, @PathVariable Long userId) {
         log.info("Обновление пользователя {} ", userDto.getId());
-        return userService.update(userDto, userId);
+        return ResponseEntity.ok(userService.update(userDto, userId));
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable Long userId) {
-        log.info("Пользователь {} удален ", userId);
+    public ResponseEntity<Void> delete(@PathVariable Long userId) {
+        log.info("Пользователь {} удалён ", userId);
         userService.delete(userId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUser(@PathVariable Long userId) {
+    public ResponseEntity<UserDto> get(@PathVariable Long userId) {
         log.info("Получить пользователя {} ", userId);
-        return userService.getById(userId);
+        return ResponseEntity.ok(userService.getById(userId));
     }
 
     @GetMapping
-    public List<UserDto> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAll() {
         log.info("Список всех пользователей");
-        return userService.getAll();
+        return ResponseEntity.ok(userService.getAll());
     }
 }

@@ -31,6 +31,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidationException(final ValidationException e) {
+        logger.debug("Validation exception occurred: {}", e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleUnsupportedStatusException(final UnsupportedStatusException e) {
         logger.debug("UnsupportedStatusException occurred: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
