@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -40,6 +41,7 @@ public class ItemControllerTest {
     private ItemDto firstitemDto;
 
     private ItemDto secondItemDto;
+    private ItemDto thirditemDto;
 
     private CommentDto commentDto;
 
@@ -197,5 +199,47 @@ public class ItemControllerTest {
                 .andExpect(content().json(mapper.writeValueAsString(commentDto)));
 
         verify(itemService, times(1)).addComment(1L, 1L, commentDto);
+    }
+
+    @Test
+    void invalidItem_AddItem_ReturnsBadRequest() throws Exception {
+        thirditemDto = ItemDto.builder().build();
+
+        mvc.perform(post("/items")
+                        .content(mapper.writeValueAsString(thirditemDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(USER_ID, 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void edgeCasePagination_ReturnsCorrectResults() throws Exception {
+        int totalItems = 15;
+        when(itemService.getItemsUser(anyLong(), anyInt(), anyInt()))
+                .thenReturn(Collections.nCopies(totalItems, firstitemDto));
+
+        mvc.perform(get("/items")
+                        .param("from", "0")
+                        .param("size", String.valueOf(totalItems))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(USER_ID, 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(totalItems)));
+    }
+
+    @Test
+    void searchItem_NoMatch_ReturnsEmptyList() throws Exception {
+        when(itemService.searchItem(anyString(), anyInt(), anyInt())).thenReturn(Collections.emptyList());
+
+        mvc.perform(get("/items/search")
+                        .param("text", "nonexistent")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 }
