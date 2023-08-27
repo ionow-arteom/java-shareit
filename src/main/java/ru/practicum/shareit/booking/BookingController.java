@@ -46,18 +46,18 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<List<BookingOutDto>> getAllBookingsByBookerId(@RequestHeader(USER_ID) Long userId,
-                                                                        @RequestParam(defaultValue = "ALL", required = false) String state,
-                                                                        @RequestParam(defaultValue = "0", required = false) Integer from,
-                                                                        @RequestParam(defaultValue = "10", required = false) Integer size) {
+                                                                        @RequestParam(defaultValue = "ALL") String state,
+                                                                        @RequestParam(defaultValue = "0") Integer from,
+                                                                        @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получить все бронирования от букера Id {}", userId);
         return ResponseEntity.ok(bookingService.getAllBookingsByBookerId(userId, state, from, size));
     }
 
     @GetMapping("/owner")
     public ResponseEntity<List<BookingOutDto>> getAllBookingsForAllItemsByOwnerId(@RequestHeader(USER_ID) Long userId,
-                                                                                  @RequestParam(defaultValue = "ALL", required = false) String state,
-                                                                                  @RequestParam(defaultValue = "0", required = false) Integer from,
-                                                                                  @RequestParam(defaultValue = "10", required = false) Integer size) {
+                                                                                  @RequestParam(defaultValue = "ALL") String state,
+                                                                                  @RequestParam(defaultValue = "0") Integer from,
+                                                                                  @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получить все заказы на все вещи по владельцу Id {}", userId);
         return ResponseEntity.ok(bookingService.getAllBookingsForAllItemsByOwnerId(userId, state, from, size));
     }

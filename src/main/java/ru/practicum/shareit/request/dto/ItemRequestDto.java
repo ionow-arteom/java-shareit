@@ -12,7 +12,6 @@ import java.util.List;
 @Builder
 public class ItemRequestDto {
     private long id;
-    @NotNull(message = "Описание не может быть пустым")
     @NotBlank(message = "Описание не может быть пустым")
     private String description;
     private LocalDateTime created;

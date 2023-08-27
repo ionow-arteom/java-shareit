@@ -46,16 +46,16 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<List<ItemDto>> getAllItemsUser(@RequestHeader(USER_ID) Long userId,
-                                                         @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                         @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                                         @RequestParam(defaultValue = "0") Integer from,
+                                                         @RequestParam(defaultValue = "10") Integer size) {
         log.info("List вещей пользователя {}", userId);
         return ResponseEntity.ok(itemService.getItemsUser(userId, from, size));
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<ItemDto>> getSearchItem(@RequestParam String text,
-                                                       @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                       @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                                       @RequestParam(defaultValue = "0") Integer from,
+                                                       @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получить вещь, содержащую {}", text);
         return ResponseEntity.ok(itemService.searchItem(text, from, size));
     }

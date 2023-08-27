@@ -34,8 +34,8 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public ResponseEntity<List<ItemRequestDto>> getAll(@RequestHeader(USER_ID) Long userId,
-                                                       @RequestParam(defaultValue = "0", required = false) Integer from,
-                                                       @RequestParam(defaultValue = "10",required = false) Integer size) {
+                                                       @RequestParam(defaultValue = "0") Integer from,
+                                                       @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получить все запросы от всех пользователей ");
         return ResponseEntity.ok(itemRequestService.getAll(userId, from, size));
     }
