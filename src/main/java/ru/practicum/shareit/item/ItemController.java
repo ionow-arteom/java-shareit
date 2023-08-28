@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.ErrorResponse;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
@@ -25,49 +23,48 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto add(@RequestHeader(USER_ID) Long userId,
-                       @RequestBody @Valid ItemDto itemDto) {
+    public ResponseEntity<ItemDto> add(@RequestHeader(USER_ID) Long userId,
+                                       @RequestBody @Valid ItemDto itemDto) {
         log.info("Пользователь {}, добавил новую вещь {}", userId, itemDto.getName());
-        return itemService.add(userId, itemDto);
+        return ResponseEntity.ok(itemService.add(userId, itemDto));
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader(USER_ID) Long userId,
-                          @RequestBody ItemDto itemDto,
-                          @PathVariable Long itemId) {
+    public ResponseEntity<ItemDto> update(@RequestHeader(USER_ID) Long userId,
+                                          @RequestBody ItemDto itemDto,
+                                          @PathVariable Long itemId) {
         log.info("Пользователь {}, обновил вещь {}", userId, itemDto.getName());
-        return itemService.update(itemDto, itemId, userId);
+        return ResponseEntity.ok(itemService.update(itemDto, itemId, userId));
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto get(@RequestHeader(USER_ID) Long userId,
-                       @PathVariable Long itemId) {
+    public ResponseEntity<ItemDto> get(@RequestHeader(USER_ID) Long userId,
+                                       @PathVariable Long itemId) {
         log.info("Получить вещь {}", itemId);
-        return itemService.get(itemId, userId);
+        return ResponseEntity.ok(itemService.get(itemId, userId));
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsUser(@RequestHeader(USER_ID) Long userId) {
+    public ResponseEntity<List<ItemDto>> getAllItemsUser(@RequestHeader(USER_ID) Long userId,
+                                                         @RequestParam(defaultValue = "0") Integer from,
+                                                         @RequestParam(defaultValue = "10") Integer size) {
         log.info("List вещей пользователя {}", userId);
-        return itemService.getItemsUser(userId);
+        return ResponseEntity.ok(itemService.getItemsUser(userId, from, size));
     }
 
     @GetMapping("/search")
-    public List<ItemDto> getSearchItem(String text) {
+    public ResponseEntity<List<ItemDto>> getSearchItem(@RequestParam String text,
+                                                       @RequestParam(defaultValue = "0") Integer from,
+                                                       @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получить вещь, содержащую {}", text);
-        return itemService.searchItem(text);
+        return ResponseEntity.ok(itemService.searchItem(text, from, size));
     }
 
     @PostMapping("/{itemId}/comment")
-    public ResponseEntity<?> addComment(@RequestHeader(USER_ID) Long userId,
+    public ResponseEntity<CommentDto> addComment(@RequestHeader(USER_ID) Long userId,
                                         @PathVariable Long itemId,
                                         @RequestBody @Valid CommentDto commentDto) {
         log.info("Пользователь {} добавил комментарий к вещи {}", userId, itemId);
-        try {
-            CommentDto addedComment = itemService.addComment(userId, itemId, commentDto);
-            return ResponseEntity.ok(addedComment);
-        } catch (ValidationException e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-        }
+        return ResponseEntity.ok(itemService.addComment(userId, itemId, commentDto));
     }
 }
