@@ -107,6 +107,7 @@ public class ItemServiceTest {
                 .status(Status.APPROVED)
                 .build();
     }
+
     @Test
     void addItem() {
         when(userRepository.existsById(anyLong())).thenReturn(true);
