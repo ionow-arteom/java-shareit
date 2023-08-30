@@ -79,6 +79,7 @@ public class RequestServiceTest {
                 .build();
         itemRequestDto = ItemRequestDto.builder().description("ItemRequest 1").build();
     }
+
     @Test
     void addRequest() {
         when(userRepository.existsById(anyLong())).thenReturn(true);

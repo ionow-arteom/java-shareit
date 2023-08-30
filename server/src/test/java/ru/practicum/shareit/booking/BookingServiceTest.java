@@ -108,6 +108,7 @@ public class BookingServiceTest {
                 .status(Status.APPROVED)
                 .build();
     }
+
     @Test
     void  addBooking() {
         when(itemRepository.existsById(anyLong())).thenReturn(true);
