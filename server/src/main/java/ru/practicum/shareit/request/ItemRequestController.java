@@ -40,7 +40,7 @@ public class ItemRequestController {
     @GetMapping("/{requestId}")
     public ResponseEntity<ItemRequestDto> getRequestById(@RequestHeader(USER_ID) Long userId,
                                                          @PathVariable("requestId") Long requestId) {
-        log.info("Get request {}", requestId);
+        log.info("Получить запрос {}", requestId);
         return ResponseEntity.ok(itemRequestService.getById(userId, requestId));
     }
 }
