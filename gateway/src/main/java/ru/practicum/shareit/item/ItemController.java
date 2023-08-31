@@ -13,6 +13,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
+import java.util.Collections;
+
 import static ru.practicum.shareit.service.Constant.USER_ID;
 
 @Controller
@@ -58,6 +60,9 @@ public class ItemController {
     public ResponseEntity<Object> getSearchItem(@RequestParam("text") String text,
                                                 @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                 @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        if (text == null || text.trim().isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
         log.info("Получить вещь, содержащую {}", text);
         return itemClient.searchItem(text, from, size);
     }
